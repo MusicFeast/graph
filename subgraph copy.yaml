@@ -6,10 +6,10 @@ features:
 dataSources:
   - kind: near
     name: musicfeast-backend
-    network: near-mainnet
+    network: near-testnet
     source:
-      account: "nftv2.everyone_eats_entertainment.near"
-      startBlock: 88514535
+      account: "nft18.musicfeast.testnet"
+      startBlock: 122415674
     mapping:
       apiVersion: 0.0.5
       language: wasm/assemblyscript
@@ -24,10 +24,10 @@ dataSources:
       file: ./src/backend.ts
   - kind: near
     name: musicfeast-market
-    network: near-mainnet
+    network: near-testnet
     source:
-      account: "market.everyone_eats_entertainment.near"
-      startBlock: 88049780
+      account: "market2.musicfeast.testnet"
+      startBlock: 114674879
     mapping:
       apiVersion: 0.0.5
       language: wasm/assemblyscript

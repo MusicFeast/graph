@@ -51,6 +51,15 @@ export class Artist extends Entity {
     this.set("name", Value.fromString(value));
   }
 
+  get wallet(): string {
+    let value = this.get("wallet");
+    return value!.toString();
+  }
+
+  set wallet(value: string) {
+    this.set("wallet", Value.fromString(value));
+  }
+
   get fecha(): BigInt {
     let value = this.get("fecha");
     return value!.toBigInt();
@@ -58,6 +67,15 @@ export class Artist extends Entity {
 
   set fecha(value: BigInt) {
     this.set("fecha", Value.fromBigInt(value));
+  }
+
+  get collection(): BigInt {
+    let value = this.get("collection");
+    return value!.toBigInt();
+  }
+
+  set collection(value: BigInt) {
+    this.set("collection", Value.fromBigInt(value));
   }
 
   get total_nft(): BigInt {
@@ -85,6 +103,281 @@ export class Artist extends Entity {
 
   set total_event(value: BigInt) {
     this.set("total_event", Value.fromBigInt(value));
+  }
+}
+
+export class Autoswap extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(id != null, "Cannot save Autoswap entity without an ID");
+    if (id) {
+      assert(
+        id.kind == ValueKind.STRING,
+        `Entities of type Autoswap must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`
+      );
+      store.set("Autoswap", id.toString(), this);
+    }
+  }
+
+  static load(id: string): Autoswap | null {
+    return changetype<Autoswap | null>(store.get("Autoswap", id));
+  }
+
+  get id(): string {
+    let value = this.get("id");
+    return value!.toString();
+  }
+
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
+  }
+
+  get artist_id(): string {
+    let value = this.get("artist_id");
+    return value!.toString();
+  }
+
+  set artist_id(value: string) {
+    this.set("artist_id", Value.fromString(value));
+  }
+
+  get amount_near(): BigInt {
+    let value = this.get("amount_near");
+    return value!.toBigInt();
+  }
+
+  set amount_near(value: BigInt) {
+    this.set("amount_near", Value.fromBigInt(value));
+  }
+
+  get amount_usd(): BigDecimal {
+    let value = this.get("amount_usd");
+    return value!.toBigDecimal();
+  }
+
+  set amount_usd(value: BigDecimal) {
+    this.set("amount_usd", Value.fromBigDecimal(value));
+  }
+
+  get tax(): BigInt {
+    let value = this.get("tax");
+    return value!.toBigInt();
+  }
+
+  set tax(value: BigInt) {
+    this.set("tax", Value.fromBigInt(value));
+  }
+
+  get status_id(): i32 {
+    let value = this.get("status_id");
+    return value!.toI32();
+  }
+
+  set status_id(value: i32) {
+    this.set("status_id", Value.fromI32(value));
+  }
+
+  get status_des(): string | null {
+    let value = this.get("status_des");
+    if (!value || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set status_des(value: string | null) {
+    if (!value) {
+      this.unset("status_des");
+    } else {
+      this.set("status_des", Value.fromString(<string>value));
+    }
+  }
+}
+
+export class Autoswaphistorico extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(id != null, "Cannot save Autoswaphistorico entity without an ID");
+    if (id) {
+      assert(
+        id.kind == ValueKind.STRING,
+        `Entities of type Autoswaphistorico must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`
+      );
+      store.set("Autoswaphistorico", id.toString(), this);
+    }
+  }
+
+  static load(id: string): Autoswaphistorico | null {
+    return changetype<Autoswaphistorico | null>(
+      store.get("Autoswaphistorico", id)
+    );
+  }
+
+  get id(): string {
+    let value = this.get("id");
+    return value!.toString();
+  }
+
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
+  }
+
+  get artist_id(): string {
+    let value = this.get("artist_id");
+    return value!.toString();
+  }
+
+  set artist_id(value: string) {
+    this.set("artist_id", Value.fromString(value));
+  }
+
+  get fecha(): BigInt {
+    let value = this.get("fecha");
+    return value!.toBigInt();
+  }
+
+  set fecha(value: BigInt) {
+    this.set("fecha", Value.fromBigInt(value));
+  }
+
+  get price(): BigDecimal | null {
+    let value = this.get("price");
+    if (!value || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBigDecimal();
+    }
+  }
+
+  set price(value: BigDecimal | null) {
+    if (!value) {
+      this.unset("price");
+    } else {
+      this.set("price", Value.fromBigDecimal(<BigDecimal>value));
+    }
+  }
+
+  get amount_artist(): BigInt {
+    let value = this.get("amount_artist");
+    return value!.toBigInt();
+  }
+
+  set amount_artist(value: BigInt) {
+    this.set("amount_artist", Value.fromBigInt(value));
+  }
+
+  get amount_musicfeast(): BigInt | null {
+    let value = this.get("amount_musicfeast");
+    if (!value || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set amount_musicfeast(value: BigInt | null) {
+    if (!value) {
+      this.unset("amount_musicfeast");
+    } else {
+      this.set("amount_musicfeast", Value.fromBigInt(<BigInt>value));
+    }
+  }
+
+  get tax_artist(): BigInt {
+    let value = this.get("tax_artist");
+    return value!.toBigInt();
+  }
+
+  set tax_artist(value: BigInt) {
+    this.set("tax_artist", Value.fromBigInt(value));
+  }
+
+  get tax_musicfeast(): BigInt | null {
+    let value = this.get("tax_musicfeast");
+    if (!value || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set tax_musicfeast(value: BigInt | null) {
+    if (!value) {
+      this.unset("tax_musicfeast");
+    } else {
+      this.set("tax_musicfeast", Value.fromBigInt(<BigInt>value));
+    }
+  }
+
+  get amount_ft(): BigInt | null {
+    let value = this.get("amount_ft");
+    if (!value || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set amount_ft(value: BigInt | null) {
+    if (!value) {
+      this.unset("amount_ft");
+    } else {
+      this.set("amount_ft", Value.fromBigInt(<BigInt>value));
+    }
+  }
+
+  get ft_token(): string | null {
+    let value = this.get("ft_token");
+    if (!value || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set ft_token(value: string | null) {
+    if (!value) {
+      this.unset("ft_token");
+    } else {
+      this.set("ft_token", Value.fromString(<string>value));
+    }
+  }
+
+  get proccess(): string {
+    let value = this.get("proccess");
+    return value!.toString();
+  }
+
+  set proccess(value: string) {
+    this.set("proccess", Value.fromString(value));
+  }
+
+  get arg(): string | null {
+    let value = this.get("arg");
+    if (!value || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set arg(value: string | null) {
+    if (!value) {
+      this.unset("arg");
+    } else {
+      this.set("arg", Value.fromString(<string>value));
+    }
   }
 }
 
@@ -187,6 +480,15 @@ export class Serie extends Entity {
     this.set("artist_id", Value.fromString(value));
   }
 
+  get collection(): BigInt {
+    let value = this.get("collection");
+    return value!.toBigInt();
+  }
+
+  set collection(value: BigInt) {
+    this.set("collection", Value.fromBigInt(value));
+  }
+
   get typetoken_id(): string {
     let value = this.get("typetoken_id");
     return value!.toString();
@@ -194,6 +496,15 @@ export class Serie extends Entity {
 
   set typetoken_id(value: string) {
     this.set("typetoken_id", Value.fromString(value));
+  }
+
+  get is_objects(): boolean {
+    let value = this.get("is_objects");
+    return value!.toBoolean();
+  }
+
+  set is_objects(value: boolean) {
+    this.set("is_objects", Value.fromBoolean(value));
   }
 
   get title(): string {
@@ -266,20 +577,20 @@ export class Serie extends Entity {
     this.set("creator_id", Value.fromString(value));
   }
 
-  get price(): BigInt | null {
+  get price(): BigDecimal | null {
     let value = this.get("price");
     if (!value || value.kind == ValueKind.NULL) {
       return null;
     } else {
-      return value.toBigInt();
+      return value.toBigDecimal();
     }
   }
 
-  set price(value: BigInt | null) {
+  set price(value: BigDecimal | null) {
     if (!value) {
       this.unset("price");
     } else {
-      this.set("price", Value.fromBigInt(<BigInt>value));
+      this.set("price", Value.fromBigDecimal(<BigDecimal>value));
     }
   }
 
@@ -351,6 +662,18 @@ export class Nft extends Entity {
         `Entities of type Nft must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`
       );
       store.set("Nft", id.toString(), this);
+    }
+  }
+
+  delete(): void {
+    let id = this.get("id");
+    assert(id != null, "Cannot save Nft entity without an ID");
+    if (id) {
+      assert(
+        id.kind == ValueKind.STRING,
+        `Entities of type Nft must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`
+      );
+      store.remove("Nft", id.toString());
     }
   }
 
@@ -462,6 +785,33 @@ export class Nft extends Entity {
 
   set artist_id(value: string) {
     this.set("artist_id", Value.fromString(value));
+  }
+
+  get collection(): BigInt {
+    let value = this.get("collection");
+    return value!.toBigInt();
+  }
+
+  set collection(value: BigInt) {
+    this.set("collection", Value.fromBigInt(value));
+  }
+
+  get typetoken_id(): string {
+    let value = this.get("typetoken_id");
+    return value!.toString();
+  }
+
+  set typetoken_id(value: string) {
+    this.set("typetoken_id", Value.fromString(value));
+  }
+
+  get is_objects(): boolean {
+    let value = this.get("is_objects");
+    return value!.toBoolean();
+  }
+
+  set is_objects(value: boolean) {
+    this.set("is_objects", Value.fromBoolean(value));
   }
 
   get offer(): Array<string> {
@@ -684,7 +1034,6 @@ export class Market extends Entity {
     this.set("transaction_fee", Value.fromString(value));
   }
 }
-
 
 export class Offer extends Entity {
   constructor(id: string) {
