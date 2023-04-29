@@ -23,6 +23,7 @@ dataSources:
       receiptHandlers:
         - handler: handleReceipt
       file: ./src/backend.ts
+<<<<<<< HEAD
   - kind: near
     name: musicfeast-market
     network: near-mainnet
@@ -42,3 +43,5 @@ dataSources:
         - handler: handleReceipt
       file: ./src/market.ts
       sdadasd
+=======
+>>>>>>> 58364c22638f87a5e2ef1bae7ca86cc869ff5ec8
