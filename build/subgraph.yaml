@@ -1,0 +1,25 @@
+specVersion: 0.0.4
+schema:
+  file: schema.graphql
+features:
+  - ipfsOnEthereumContracts
+dataSources:
+  - kind: near
+    name: mintick-backend
+    network: near-testnet
+    source:
+      account: nft5.mintickback.testnet
+      startBlock: 125167590
+    mapping:
+      apiVersion: 0.0.5
+      language: wasm/assemblyscript
+      entities:
+        - Series
+        - Nft
+        - Controlaforo
+        - Controlobject
+        - Market
+        - Offer
+      receiptHandlers:
+        - handler: handleReceipt
+      file: mintick-backend\mintick-backend.wasm

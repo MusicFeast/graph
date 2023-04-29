@@ -1,5 +1,5 @@
 import { near, BigInt, JSONValue, json, ipfs, log, TypedMap, Value, typeConversion, BigDecimal, bigInt, bigDecimal } from "@graphprotocol/graph-ts"
-import { Artist, Typetoken, Serie, Nft, Market, Autoswap, Autoswaphistorico } from "../generated/schema"
+import { Serie, Nft, Controlaforo, Controlobject, Market } from "../generated/schema"
 
 export function handleReceipt(receipt: near.ReceiptWithOutcome): void {
   const actions = receipt.receipt.actions;
@@ -30,133 +30,7 @@ function handleAction(
   //se obtiene el nombre del metodo que fue ejecutado en el smart contract
   const methodName = action.toFunctionCall().methodName;
   
-  if (methodName == 'add_artist') {
-    if(outcome.logs.length > 0) {
-      const outcomeLog = outcome.logs[0].toString();
-      
-      if(!json.try_fromString(outcomeLog).isOk) return
-      let outcomelogs = json.try_fromString(outcomeLog);
-      const jsonObject = outcomelogs.value.toObject();
-
-      if (jsonObject) {
-        const logJson = jsonObject.get('params');
-        if (!logJson) return;
-        const data = logJson.toObject();
-        
-        const id_artist = data.get('id')
-        const name = data.get('name')
-        const wallet = data.get('wallet')
-
-        if (!id_artist || !name || !wallet) return
-        
-        let artist = Artist.load(id_artist.toString())
-        if (!artist) {
-          artist = new Artist(id_artist.toString())
-          artist.name = name.toString()
-          artist.wallet = wallet.toString()
-          artist.fecha = BigInt.fromU64(blockHeader.timestampNanosec)
-          artist.collection = BigInt.fromI32(1)
-          artist.total_nft = BigInt.fromI32(0)
-          artist.total_collection = BigInt.fromI32(0)
-          artist.total_event = BigInt.fromI32(0)
-          artist.save()
-        }
-        
-      }
-    }
-  }
-
-
-
-  if (methodName == 'next_collection') {
-    if(outcome.logs.length > 0) {
-      const outcomeLog = outcome.logs[0].toString();
-      
-      if(!json.try_fromString(outcomeLog).isOk) return
-      let outcomelogs = json.try_fromString(outcomeLog);
-      const jsonObject = outcomelogs.value.toObject();
-
-      if (jsonObject) {
-        const logJson = jsonObject.get('params');
-        if (!logJson) return;
-        const data = logJson.toObject();
-        
-        const id_artist = data.get('artist_id')
-        const next_collection = data.get('next_collection')
-
-        if (!id_artist || !next_collection) return
-        
-        let artist = Artist.load(id_artist.toString())
-        if (artist) {
-          artist.collection = BigInt.fromString(next_collection.toString())
-          artist.save()
-        }
-        
-      }
-    }
-  }
-
-  if (methodName == 'update_artist') {
-    if(outcome.logs.length > 0) {
-      const outcomeLog = outcome.logs[0].toString();
-      
-      if(!json.try_fromString(outcomeLog).isOk) return
-      let outcomelogs = json.try_fromString(outcomeLog);
-      const jsonObject = outcomelogs.value.toObject();
-
-      if (jsonObject) {
-        const logJson = jsonObject.get('params');
-        if (!logJson) return;
-        const data = logJson.toObject();
-        
-        const id_artist = data.get('artist_id')
-        const name = data.get('name')
-        const wallet = data.get('wallet')
-
-        if (!id_artist || !name || !wallet) return
-        
-        let artist = Artist.load(id_artist.toString())
-        if (artist) {
-          artist.name = name.toString()
-          artist.wallet = wallet.toString()
-          artist.save()
-        }
-        
-      }
-    }
-  }
-
-  if (methodName == 'add_type_token_series') {
-    if(outcome.logs.length > 0) {
-      const outcomeLog = outcome.logs[0].toString();
-      
-      if(!json.try_fromString(outcomeLog).isOk) return
-      let outcomelogs = json.try_fromString(outcomeLog);
-      const jsonObject = outcomelogs.value.toObject();
-
-      if (jsonObject) {
-        const logJson = jsonObject.get('params');
-        if (!logJson) return;
-        const data = logJson.toObject();
-        
-        const id_type_token = data.get('id')
-        const description = data.get('description')
-
-        if (!id_type_token || !description) return
-        
-        let typetoken = Typetoken.load(id_type_token.toString())
-        if (!typetoken) {
-          typetoken = new Typetoken(id_type_token.toString())
-          typetoken.description = description.toString()
-          typetoken.fecha = BigInt.fromU64(blockHeader.timestampNanosec)
-          typetoken.save()
-        }
-        
-      }
-    }
-  }
-  
-  if (methodName == 'update_nft_series') {
+  if (methodName == 'update_nft_event') {
     if(outcome.logs.length > 0) {
       const outcomeLog = outcome.logs[0].toString();
       
@@ -171,6 +45,7 @@ function handleAction(
         
         const token_series_id = data.get('token_series_id')
         const metadatalog = data.get('token_metadata')
+        const is_mintable = data.get('is_mintable')
 
         if (!token_series_id || !metadatalog) return
 
@@ -185,6 +60,8 @@ function handleAction(
         const description = metadata.get('description')
         const media = metadata.get('media')
         const price = data.get('price')
+        const copies = metadata.get('copies')
+        
     
         
         //se verifica que todas las variables que necesitamos existan en el objeto metadata
@@ -198,6 +75,12 @@ function handleAction(
           if(!description.isNull()) { serie.description = description.toString() }
           serie.media = media.toString()
           if(!price.isNull()) { serie.price = BigDecimal.fromString(price.toString()) }
+          if(copies) { 
+            if(!copies.isNull()) { serie.copies = copies.toBigInt() } 
+          }
+          if(is_mintable) {
+            serie.is_mintable = is_mintable.toBool()
+          }
           serie.save()
         }
         
@@ -208,87 +91,92 @@ function handleAction(
 
  //dfdsfsdfsdfsdf
  //asddasdsd
-  if (methodName == 'nft_series') {
+  if (methodName == 'nft_event' || methodName == 'nft_objects') {
     if(outcome.logs.length > 0) {
-      const outcomeLog = outcome.logs[0].toString();
-      
-      if(!json.try_fromString(outcomeLog).isOk) return
-      let outcomelogs = json.try_fromString(outcomeLog);
-      const jsonObject = outcomelogs.value.toObject();
-
-      if (jsonObject) {
-        const logJson = jsonObject.get('params');
-        if (!logJson) return;
-        const data = logJson.toObject();
+      for (let index = 0; index < outcome.logs.length; index++) {
+        const outcomeLog = outcome.logs[index].toString();
         
-        const serie_id = data.get('token_series_id')
-        const desc_series = data.get('desc_series')
-        const creator_id = data.get('creator_id')
-        const price = data.get('price')
-        const metadatalog = data.get('token_metadata')
-        const is_objects = data.get('objects')
+        if(!json.try_fromString(outcomeLog).isOk) return
+        let outcomelogs = json.try_fromString(outcomeLog);
+        const jsonObject = outcomelogs.value.toObject();
 
-        if (!serie_id || !desc_series || !creator_id || !price || !metadatalog || !is_objects) return
+        if (jsonObject) {
+          const logJson = jsonObject.get('params');
+          if (!logJson) return;
+          const data = logJson.toObject();
+          
+          const serie_id = data.get('token_series_id')
+          const creator_id = data.get('creator_id')
+          const price = data.get('price')
+          const metadatalog = data.get('token_metadata')
+          const object_event = data.get('object_event')
+          
 
-        //convertimos la variable metadata en un objeto para poder acceder a sus variebles internas
-        const metadata = metadatalog.toObject()
+          if (!serie_id || !creator_id || !price || !metadatalog || !object_event) return
 
-        //en caso de que no se transformable en un objeto se detiene la funcion
-        if(!metadata) return
+          //convertimos la variable metadata en un objeto para poder acceder a sus variebles internas
+          const metadata = metadatalog.toObject()
 
-        //declaramos las variables dentro del objeto metadata
-        const title = metadata.get('title')
-        const description = metadata.get('description')
-        const media = metadata.get('media')
-        const extra = metadata.get('extra')
-        const copies = metadata.get('copies')
-        const reference = metadata.get('reference')
+          //en caso de que no se transformable en un objeto se detiene la funcion
+          if(!metadata) return
 
-        //se verifica que todas las variables que necesitamos existan en el objeto metadata
-        if(!title || !description || !media || !extra || !reference) return
+          //declaramos las variables dentro del objeto metadata
+          const title = metadata.get('title')
+          const description = metadata.get('description')
+          const media = metadata.get('media')
+          const extra = metadata.get('extra')
+          const copies = metadata.get('copies')
+          const reference = metadata.get('reference')
+          const issued_at = metadata.get('issued_at')
+          const starts_at = metadata.get('starts_at')
+          const updated_at = metadata.get('updated_at')
+          const expires_at = metadata.get('expires_at')
+          
 
-        if(title.isNull() || media.isNull() || reference.isNull()) return
-        
-        //log.warning('paso {}', ["1.2"])
-  
-        let serie = Serie.load(serie_id.toString())
-        let artist_id = serie_id.toString().split("|")[0].toString()
-        let typetoken_id = serie_id.toString().split("|")[1].toString()
-        let collection = serie_id.toString().split("|")[2].toString()
+          //se verifica que todas las variables que necesitamos existan en el objeto metadata
+          if(!title || !description || !media || !extra) return
 
-        if (!serie) {
-          serie = new Serie(serie_id.toString())
-          serie.desc_series = desc_series.toString()
-          serie.artist_id = artist_id
-          serie.collection = BigInt.fromString(collection)
-          serie.typetoken_id = typetoken_id
-          serie.is_objects = is_objects.toBool()
-          serie.title = title.toString()
-          if(!description.isNull()) { serie.description = description.toString() }
-          serie.media = media.toString()
-          if(!extra.isNull()) { serie.extra = extra.toString() }
-          serie.reference = reference.toString()
-          serie.creator_id = creator_id.toString()
-          if(!price.isNull()) { 
-            serie.price = BigDecimal.fromString(price.toF64().toString())
-            serie.price_near = bigDecimal.fromString("0")//BigDecimal.fromString(price.toString()).divDecimal(BigDecimal.fromString("1000000000000000000000000"))
+          if(title.isNull() || media.isNull()) return
+          
+          //log.warning('paso {}', ["1.2"])
+    
+          let serie = Serie.load(serie_id.toString())
+          let typetoken_id = serie_id.toString().split("|")[0].toString()
+
+          if (!serie) {
+            serie = new Serie(serie_id.toString())
+            serie.typetoken_id = typetoken_id
+            serie.object_event = object_event.toBool()
+            serie.title = title.toString()
+            if(!description.isNull()) { serie.description = description.toString() }
+            serie.media = media.toString()
+            if(!extra.isNull()) { serie.extra = extra.toString() }
+            if(!reference!.isNull()) { serie.reference = reference!.toString() }
+            if(!issued_at!.isNull()) {serie.issued_at = issued_at!.toString() }
+            if(!starts_at!.isNull()) {serie.starts_at = starts_at!.toString() }
+            if(!updated_at!.isNull()) {serie.updated_at = updated_at!.toString() }
+            if(!expires_at!.isNull()) {serie.expires_at = expires_at!.toString() }
+            serie.creator_id = creator_id.toString()
+            if(!price.isNull()) { 
+              serie.price = BigDecimal.fromString(price.toF64().toString())
+              serie.price_near = bigDecimal.fromString("0")//BigDecimal.fromString(price.toString()).divDecimal(BigDecimal.fromString("1000000000000000000000000"))
+            }
+            serie.nft_amount_sold = bigInt.fromString("0")
+            serie.supply = BigInt.fromString("0")
+            serie.nftsold = BigInt.fromString("0")
+            serie.redeemerevents = BigInt.fromString("0")
+            serie.redeemerobjects = BigInt.fromString("0")
+            serie.aproved_event = BigInt.fromString("0")
+            serie.aproved_objects = BigInt.fromString("0")
+            if(copies) { 
+              if(!copies.isNull()) { serie.copies = copies.toBigInt() } 
+            }
+            serie.is_mintable = true
+            serie.fecha = BigInt.fromU64(blockHeader.timestampNanosec)
+            serie.save()
           }
-          serie.supply = BigInt.fromString("0")
-          if(copies) { 
-            if(!copies.isNull()) { serie.copies = copies.toBigInt() } 
-          }
-          serie.fecha = BigInt.fromU64(blockHeader.timestampNanosec)
-          serie.save()
+          
         }
-
-        if(typetoken_id == "6") return
-        
-        let artist = Artist.load(artist_id) 
-        if(artist) {
-          artist.total_collection = artist.total_collection.plus(BigInt.fromString("1"))
-          artist.save()
-        }
-        
       }
     }
     //let utcSeconds = (blockHeader.timestampNanosec / 1000000);
@@ -300,7 +188,7 @@ function handleAction(
 
 
   //este evento es disparado cuando el metodo es create_form
-  if (methodName == 'nft_mint' || methodName == 'nft_buy') {  
+  if (methodName == 'nft_mint') {  
     if(outcome.logs.length > 0) {
       for (let index = 0; index < outcome.logs.length; index++) {
         //obtenemos la primera iteracion del log
@@ -320,7 +208,7 @@ function handleAction(
           if (!eventData) return
           
           const eventArray:JSONValue[] = eventData.toArray()
-
+          
           const data = eventArray[0].toObject()
           const tokenIds = data.get('token_ids')
           const owner_id = data.get('owner_id')
@@ -331,343 +219,151 @@ function handleAction(
           const tokenId = ids[0].toString()
 
           const serie_id = tokenId.split(":", 1)[0].toString()
-          // busco la metadata del token en la entidad Serie
-          let metadata = Serie.load(serie_id)
-          //verifico que la metadata exista, de lo contrario no se guarda el nft
-          if(!metadata) return
+          
 
-
+          let serie = Serie.load(serie_id)
+          if(!serie) return
 
           //buscamos si existe un token id
           let nft = Nft.load(tokenId)
+
+          let typetoken_id = serie_id.toString().split("|")[0].toString()
           //validando que el token id no exista para agregarlo
           if(!nft) { 
             //se crea un nevo espacion en memoria de Form asociado al id y se guardan los datos
             nft = new Nft(tokenId)
             nft.serie_id = serie_id
             nft.owner_id = owner_id.toString()
-            nft.title = metadata.title + " # " + tokenId.split(":", 2)[1].toString()
-            nft.description = metadata.description
-            nft.media = metadata.media
-            nft.extra = metadata.extra
-            nft.reference = metadata.reference
+            nft.title = serie.title + " # " + tokenId.split(":", 2)[1].toString()
+            nft.metadata = serie_id
             nft.fecha = BigInt.fromU64(blockHeader.timestampNanosec)
-            nft.artist_id = serie_id.toString().split("|")[0].toString()
-            nft.collection = BigInt.fromString(serie_id.toString().split("|")[2].toString())
-            nft.typetoken_id = serie_id.toString().split("|")[1].toString()
-            nft.is_objects = metadata.is_objects
+            nft.typetoken_id = typetoken_id
             nft.save()
-          }
-          metadata.supply = metadata.supply.plus(BigInt.fromString("1"))
-          metadata.save()
 
-          let artist = Artist.load(serie_id.toString().split("|")[0].toString()) 
-          if(artist) {
-            artist.total_nft = artist.total_nft.plus(BigInt.fromString("1"))
-            artist.save()
+            if (typetoken_id == "1") {
+              serie.supply = serie.supply.plus(BigInt.fromString("1"))
+              serie.save()
+            }
           }
-        
+
         } else {
-          const outcomeLog = outcome.logs[1].toString();
-          
           if(!json.try_fromString(outcomeLog).isOk) return
-
           let outcomelogs = json.try_fromString(outcomeLog);
           const jsonObject = outcomelogs.value.toObject();
 
           if (jsonObject) {
             const logJson = jsonObject.get('params');
-            
             if (!logJson) return;
-            
             const data = logJson.toObject();
             
+            const token_series_id = data.get('token_series_id')
+
+            const is_mintable = data.get('is_mintable')
+
+            if (!token_series_id) return
             
-            const artista = data.get('artista')
-            const price = data.get('price')
-            const royalty = data.get('royalty')
+            let serie = Serie.load(token_series_id.toString())
+            if(serie) {
+              if(is_mintable) { serie.is_mintable = is_mintable.toBool() }
+              serie.save()
+            }
+
+          }
+        }
+      }
+    }
+  }
+  
+
+   //este evento es disparado cuando el metodo es create_form
+   if (methodName == 'nft_buy') {  
+    if(outcome.logs.length > 0) {
+      for (let index = 0; index < outcome.logs.length; index++) {
+        //obtenemos la primera iteracion del log
+        const outcomeLog = outcome.logs[index].toString();
+
+        if(outcomeLog.substring(0, 11) == "EVENT_JSON:") {
+          const parsed = outcomeLog.replace('EVENT_JSON:', '')
+          //convirtiendo el log en un objeto ValueJSON
+          let outcomelogs = json.try_fromString(parsed);
+        
+          //validamos que se cree un objeto tipo ValueJSON valido a partir del log capturado
+          if(!outcomelogs.isOk) return;
+
+          const jsonlog = outcomelogs.value.toObject();
+          
+          const eventData = jsonlog.get('data')
+          if (!eventData) return
+          
+          const eventArray:JSONValue[] = eventData.toArray()
+          
+          const data = eventArray[0].toObject()
+          const tokenIds = data.get('token_ids')
+          const owner_id = data.get('owner_id')
+          
+          if (!tokenIds || !owner_id) return
+          
+          const ids:JSONValue[] = tokenIds.toArray()
+          const tokenId = ids[0].toString()
+
+          const serie_id = tokenId.split(":", 1)[0].toString()
+          
+
+          let serie = Serie.load(serie_id)
+          if(!serie) return
+
+          //buscamos si existe un token id
+          let nft = Nft.load(tokenId)
+
+          let typetoken_id = serie_id.toString().split("|")[0].toString()
+          //validando que el token id no exista para agregarlo
+          if(!nft) { 
+            //se crea un nevo espacion en memoria de Form asociado al id y se guardan los datos
+            nft = new Nft(tokenId)
+            nft.serie_id = serie_id
+            nft.owner_id = owner_id.toString()
+            nft.title = serie.title + " # " + tokenId.split(":", 2)[1].toString()
+            nft.metadata = serie_id
+            nft.fecha = BigInt.fromU64(blockHeader.timestampNanosec)
+            nft.typetoken_id = typetoken_id
+            nft.save()
+
+            if (typetoken_id == "1") {
+              serie.supply = serie.supply.plus(BigInt.fromString("1"))
+              serie.nftsold = serie.nftsold.plus(BigInt.fromString("1"))
+              serie.save()
+            }
+          
+          }
+
+        } else {
+          if(!json.try_fromString(outcomeLog).isOk) return
+          let outcomelogs = json.try_fromString(outcomeLog);
+          const jsonObject = outcomelogs.value.toObject();
+
+          if (jsonObject) {
+            const logJson = jsonObject.get('params');
+            if (!logJson) return;
+            const data = logJson.toObject();
             
-            if (!artista || !price || !royalty) return
-            
-            const royaltys:JSONValue[] = royalty.toArray()
-            for(var i = 0; i < royaltys.length; i++){
-              let artistid = royaltys[i].toObject().get('artist_id')!.toString()
-              let swap = Autoswap.load(artistid)
-              if(!swap) { 
-                swap = new Autoswap(artistid)
-                swap.artist_id = artistid
-                if(artistid == "0"){
-                  swap.amount_near = BigInt.fromString(royaltys[i].toObject().get('amount')!.toString())
-                  swap.tax = BigInt.fromString(royaltys[i].toObject().get('tax')!.toString())
-                } else {
-                  swap.amount_near = BigInt.fromString(royaltys[i].toObject().get('amount')!.toString()).plus(BigInt.fromString(royaltys[i].toObject().get('tax')!.toString()))
-                  swap.tax = BigInt.fromString("0")
-                }
-                if(royaltys[i].toObject().get('amount_usd')) {
-                  swap.amount_usd = BigDecimal.fromString(royaltys[i].toObject().get('amount_usd')!.toString())
-                } else {
-                  swap.amount_usd = BigDecimal.fromString("0")
-                }
-              } else {
-                if(artistid == "0"){
-                  swap.amount_near = swap.amount_near.plus(BigInt.fromString(royaltys[i].toObject().get('amount')!.toString()))
-                  swap.tax = swap.tax.plus(BigInt.fromString(royaltys[i].toObject().get('tax')!.toString()))
-                } else {
-                  swap.amount_near = swap.amount_near.plus(BigInt.fromString(royaltys[i].toObject().get('amount')!.toString()).plus(BigInt.fromString(royaltys[i].toObject().get('tax')!.toString())))
-                }
-                if(royaltys[i].toObject().get('amount_usd')) {
-                  swap.amount_usd = swap.amount_usd.plus(BigDecimal.fromString(royaltys[i].toObject().get('amount_usd')!.toString()))
-                }
+            const token_series_id = data.get('token_series_id')
+            const amount_creator = data.get('amount_creator')
+            const is_mintable = data.get('is_mintable')
+
+            if (token_series_id) {
+              let serie = Serie.load(token_series_id.toString())
+              if(serie) {
+                if(is_mintable) { serie.is_mintable = is_mintable.toBool() }
+                if(amount_creator) { serie.nft_amount_sold = serie.nft_amount_sold.plus(BigInt.fromString(amount_creator.toString())) }
+                serie.save()
               }
-              swap.save()
             }
-            
-            //werwerwerwerwere
-            /*let swap = Autoswap.load(artista.toString())
-            if(!swap) { 
-              swap = new Autoswap(artista.toString())
-              swap.artist_id = artista.toString()
-              swap.amount = BigInt.fromString(amount_artist.toString())
-              swap.tax = BigInt.fromString(tax_artist.toString())
-            } else {
-              swap.amount = swap.amount.plus(BigInt.fromString(amount_artist.toString()))
-              swap.tax = swap.tax.plus(BigInt.fromString(tax_artist.toString()))
-            }
-            swap.save()
-
-            swap = Autoswap.load("0")
-            if(!swap) { 
-              swap = new Autoswap("0")
-              swap.artist_id = "0"
-              swap.amount = BigInt.fromString(amount_musicfeast.toString())
-              swap.tax = BigInt.fromString(tax_musicfeast.toString())
-            } else {
-              swap.amount = swap.amount.plus(BigInt.fromString(amount_musicfeast.toString()))
-              swap.tax = swap.tax.plus(BigInt.fromString(tax_musicfeast.toString()))
-            }
-            swap.save()
-            */
-
-            /*let idhis = artista.toString() + "|" + blockHeader.timestampNanosec.toString()
-            let swaphis = Autoswaphistorico.load(idhis)
-            if(!swaphis) { 
-              swaphis = new Autoswaphistorico(idhis)
-              swaphis.artist_id = artista.toString()
-              swaphis.fecha = BigInt.fromU64(blockHeader.timestampNanosec)
-              swaphis.price = BigDecimal.fromString(price.toString())
-              swaphis.amount_artist = BigInt.fromString(amount_artist.toString())
-              swaphis.amount_musicfeast = BigInt.fromString(amount_musicfeast.toString())
-              swaphis.tax_artist = BigInt.fromString(tax_artist.toString())
-              swaphis.tax_musicfeast = BigInt.fromString(tax_musicfeast.toString())
-              swaphis.proccess = "buy"
-              
-              swaphis.save()
-            } */
 
           }
         }
       }
     }
   }
-
-  if (methodName == 'auto_swap_complete') {
-    if(outcome.logs.length > 0) {
-      const outcomeLog = outcome.logs[0].toString();
-      
-      if(!json.try_fromString(outcomeLog).isOk) return
-      let outcomelogs = json.try_fromString(outcomeLog);
-      const jsonObject = outcomelogs.value.toObject();
-
-      if (jsonObject) {
-        const logJson = jsonObject.get('params');
-        if (!logJson) return;
-        const data = logJson.toObject();
-        
-        const artista = data.get('artista')
-        const amount_near = data.get('amount_near')
-        const tax_near = data.get('tax_near')
-        const amount_usd = data.get('amount_usd')
-        const ft_token = data.get('ft_token')
-
-        if (!artista || !amount_near || !tax_near || !ft_token || !amount_usd) return
-        
-        let swap = Autoswap.load(artista.toString())
-        if(swap) {
-          if(artista.toString() == "0"){
-            swap.amount_near = swap.amount_near.minus(BigInt.fromString(amount_near.toString()))
-            swap.tax = swap.tax.minus(BigInt.fromString(tax_near.toString()))
-          } else {
-            swap.amount_near = swap.amount_near.minus(BigInt.fromString(amount_near.toString()).plus(BigInt.fromString(tax_near.toString())))
-          }
-          swap.amount_usd =  swap.amount_usd.minus(BigDecimal.fromString(amount_usd.toString()))
-          swap.save()
-        }
-
-        let idhis = artista.toString() + "|" + blockHeader.timestampNanosec.toString()
-        
-        let swaphis = Autoswaphistorico.load(idhis)
-        if(!swaphis) { 
-          swaphis = new Autoswaphistorico(idhis)
-          swaphis.artist_id = artista.toString()
-          swaphis.fecha = BigInt.fromU64(blockHeader.timestampNanosec)
-          swaphis.amount_artist = BigInt.fromString(amount_near.toString())
-          swaphis.tax_artist = BigInt.fromString(tax_near.toString())
-          swaphis.ft_token = ft_token.toString()
-          swaphis.proccess = "auto_swap_complete"
-          
-          swaphis.save()
-        } 
-      }
-    }
-  }
-
-
-  if (methodName == 'auto_swap_ini') {
-    if(outcome.logs.length > 0) {
-      const outcomeLog = outcome.logs[0].toString();
-      
-      if(!json.try_fromString(outcomeLog).isOk) return
-      let outcomelogs = json.try_fromString(outcomeLog);
-      const jsonObject = outcomelogs.value.toObject();
-
-      if (jsonObject) {
-        const logJson = jsonObject.get('params');
-        if (!logJson) return;
-        const data = logJson.toObject();
-        
-        const artista = data.get('artista')
-        const amount_near = data.get('amount_near')
-        const tax_near = data.get('tax_near')
-        const ft_token = data.get('ft_token')
-
-        if (!artista || !amount_near || !tax_near || !ft_token) return
-        
-        let swap = Autoswap.load(artista.toString())
-        if(swap) {
-          if(artista.toString() == "0"){
-            swap.amount_near = swap.amount_near.minus(BigInt.fromString(amount_near.toString()))
-            swap.tax = swap.tax.minus(BigInt.fromString(tax_near.toString()))
-          } else {
-            swap.amount_near = swap.amount_near.minus(BigInt.fromString(amount_near.toString()).plus(BigInt.fromString(tax_near.toString())))
-          }
-          swap.save()
-        }
-
-        let idhis = artista.toString() + "|" + blockHeader.timestampNanosec.toString()
-        
-        let swaphis = Autoswaphistorico.load(idhis)
-        if(!swaphis) { 
-          swaphis = new Autoswaphistorico(idhis)
-          swaphis.artist_id = artista.toString()
-          swaphis.fecha = BigInt.fromU64(blockHeader.timestampNanosec)
-          swaphis.amount_artist = BigInt.fromString(amount_near.toString())
-          swaphis.tax_artist = BigInt.fromString(tax_near.toString())
-          swaphis.ft_token = ft_token.toString()
-          swaphis.proccess = "auto_swap_ini"
-          
-          swaphis.save()
-        } 
-      }
-    }
-  }
-
-
-  if (methodName == 'auto_swap_end') {
-    if(outcome.logs.length > 0) {
-      const outcomeLog = outcome.logs[0].toString();
-      
-      if(!json.try_fromString(outcomeLog).isOk) return
-      let outcomelogs = json.try_fromString(outcomeLog);
-      const jsonObject = outcomelogs.value.toObject();
-
-      if (jsonObject) {
-        const logJson = jsonObject.get('params');
-        if (!logJson) return;
-        const data = logJson.toObject();
-        
-        const artista = data.get('artista')
-        const amount_near = data.get('amount_near')
-        const tax_near = data.get('tax_near')
-        const amount_usd = data.get('amount_usd')
-        const ft_token = data.get('ft_token')
-
-        if (!artista || !amount_near || !tax_near || !amount_usd || !ft_token) return
-        
-        /*let swap = Autoswap.load(artista.toString())
-        if(swap) {
-          swap.amount = swap.amount.minus(BigInt.fromString(amount_near.toString()))
-          swap.tax = swap.tax.minus(BigInt.fromString(tax_near.toString()))
-          swap.save()
-        }*/
-
-        let idhis = artista.toString() + "|" + blockHeader.timestampNanosec.toString()
-        
-        let swaphis = Autoswaphistorico.load(idhis)
-        if(!swaphis) { 
-          swaphis = new Autoswaphistorico(idhis)
-          swaphis.artist_id = artista.toString()
-          swaphis.fecha = BigInt.fromU64(blockHeader.timestampNanosec)
-          swaphis.amount_artist = BigInt.fromString(amount_near.toString())
-          swaphis.amount_ft = BigInt.fromString(amount_usd.toString())
-          swaphis.tax_artist = BigInt.fromString(tax_near.toString())
-          swaphis.ft_token = ft_token.toString()
-          swaphis.proccess = "auto_swap_end"
-          
-          swaphis.save()
-        } 
-      }
-    }
-  }
-
-  if (methodName == 'auto_swap_error') {
-    if(outcome.logs.length > 0) {
-      const outcomeLog = outcome.logs[0].toString();
-      
-      if(!json.try_fromString(outcomeLog).isOk) return
-      let outcomelogs = json.try_fromString(outcomeLog);
-      const jsonObject = outcomelogs.value.toObject();
-
-      if (jsonObject) {
-        const logJson = jsonObject.get('params');
-        if (!logJson) return;
-        const data = logJson.toObject();
-        
-        const artista = data.get('artista')
-        const amount_near = data.get('amount_near')
-        const tax_near = data.get('tax_near')
-        const arg = data.get('arg')
-
-        if (!artista || !amount_near || !tax_near || !arg) return
-        
-        let swap = Autoswap.load(artista.toString())
-        if(swap) {
-          if(artista.toString() == "0") {
-            swap.amount_near = swap.amount_near.plus(BigInt.fromString(amount_near.toString()))
-            swap.tax = swap.tax.plus(BigInt.fromString(tax_near.toString()))
-          } else {
-            swap.amount_near = swap.amount_near.plus(BigInt.fromString(amount_near.toString()).plus(BigInt.fromString(tax_near.toString())))
-          }
-          swap.save()
-        }
-
-        let idhis = artista.toString() + "|" + blockHeader.timestampNanosec.toString()
-        
-        let swaphis = Autoswaphistorico.load(idhis)
-        if(!swaphis) { 
-          swaphis = new Autoswaphistorico(idhis)
-          swaphis.artist_id = artista.toString()
-          swaphis.fecha = BigInt.fromU64(blockHeader.timestampNanosec)
-          swaphis.amount_artist = BigInt.fromString(amount_near.toString())
-          swaphis.tax_artist = BigInt.fromString(tax_near.toString())
-          swaphis.arg = arg.toString()
-          swaphis.proccess = "auto_swap_error"
-          
-          swaphis.save()
-        } 
-      }
-    }
-  }
-
 
   if (methodName == 'nft_transfer' || methodName == 'nft_transfer_payout' || methodName == 'nft_transfer_unsafe' || methodName == 'nft_transfer_call') {  
     if(outcome.logs.length > 0) {
@@ -716,7 +412,7 @@ function handleAction(
   }
 
   
-  if (methodName == 'nft_burn') {  
+  if (methodName == 'nft_burn' || methodName == 'burn_object') {  
     if(outcome.logs.length > 0) {
       //obtenemos la primera iteracion del log
       const outcomeLog = outcome.logs[0].toString();
@@ -750,6 +446,7 @@ function handleAction(
         nft.delete()
       }
 
+
       //si existe en el market lo eliminamos
       const id = tokenId.toString() + "|" + owner_id.toString()
 
@@ -758,6 +455,110 @@ function handleAction(
         market.delete()    
       }
 
+      if(methodName == 'burn_object') {
+        let object_event = false
+        let token_serie_id = ""
+        let token_objec_id = tokenId.toString().split(":")[0].toString()
+        let serie_object = Serie.load(token_objec_id)
+        if(serie_object){
+          object_event = serie_object.object_event
+          token_serie_id = serie_object.reference!
+          
+          let serie = Serie.load(token_serie_id)
+          if(serie) {
+            if(object_event){
+              serie.redeemerevents = serie.redeemerevents.plus(BigInt.fromString("1"))
+            } else {
+              serie.redeemerobjects = serie.redeemerobjects.plus(BigInt.fromString("1"))
+            }
+            serie.save()
+          }
+        }
+
+        const outcomeLog = outcome.logs[1].toString();
+        
+        if(!json.try_fromString(outcomeLog).isOk) return
+        let outcomelogs = json.try_fromString(outcomeLog);
+        const jsonObject = outcomelogs.value.toObject();
+
+        if (jsonObject) {
+          const logJson = jsonObject.get('params');
+          if (!logJson) return;
+          const data = logJson.toObject();
+          
+          const token_id = data.get('token_id')
+          const ownerid = data.get('owner_id')
+          const token_object_id = data.get('token_object_id')
+          const user_burn = data.get('user_burn')
+
+          if (!token_id || !ownerid || !token_object_id || !user_burn) return
+          
+          if(object_event){
+            let aforo = new Controlaforo(token_id.toString())
+            aforo.owner_id = ownerid.toString()
+            aforo.token_object_id = token_object_id.toString()
+            aforo.event_id = token_serie_id
+            aforo.user_burn = user_burn.toString()
+            aforo.fecha = BigInt.fromU64(blockHeader.timestampNanosec)
+            aforo.aproved = false
+            aforo.save()
+          } else {
+            let objectc = new Controlobject(token_id.toString())
+            objectc.owner_id = ownerid.toString()
+            objectc.token_object_id = token_object_id.toString()
+            objectc.event_id = token_serie_id
+            objectc.user_burn = user_burn.toString()
+            objectc.fecha = BigInt.fromU64(blockHeader.timestampNanosec)
+            objectc.aproved = false
+            objectc.save()
+          }
+        }
+      }
+    }
+  }
+
+  if (methodName == 'approved_object') {
+    if(outcome.logs.length > 0) {
+      const outcomeLog = outcome.logs[0].toString();
+      
+      if(!json.try_fromString(outcomeLog).isOk) return
+      let outcomelogs = json.try_fromString(outcomeLog);
+      const jsonObject = outcomelogs.value.toObject();
+
+      if (jsonObject) {
+        const logJson = jsonObject.get('params');
+        if (!logJson) return;
+        const data = logJson.toObject();
+        
+        const token_id = data.get('token_id')
+        
+        if (!token_id) return
+
+        let aforo = Controlaforo.load(token_id.toString())
+        if(aforo){
+          aforo.aproved = true
+          let serie = Serie.load(aforo.event_id)
+          if(serie){
+            serie.aproved_event = serie.aproved_event.plus(BigInt.fromI32(1))
+            serie.save()
+          }
+          aforo.save()  
+        }
+
+        let objects = Controlobject.load(token_id.toString())
+        if(objects){
+          objects.aproved = true
+          let serie = Serie.load(objects.event_id)
+          if(serie){
+            serie.aproved_objects = serie.aproved_objects.plus(BigInt.fromI32(1))
+            serie.save()
+          }
+          objects.save()  
+        }
+        
+        
+        
+      }
     }
   }
 
