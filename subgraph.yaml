@@ -40,3 +40,4 @@ dataSources:
       receiptHandlers:
         - handler: handleReceipt
       file: ./src/market.ts
+      sdadasd

@@ -8,7 +8,7 @@ type Artist @entity {
   total_collection: BigInt!
   total_event: BigInt!
 }
-
+asasasas
 type Autoswap @entity {
   id: ID!
   artist_id: String!

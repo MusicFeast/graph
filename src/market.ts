@@ -12,7 +12,7 @@ export function handleReceipt(receipt: near.ReceiptWithOutcome): void {
     );
   }
 }
-
+aaa
 //const list_contract_atributos_referencia = [];
 
 

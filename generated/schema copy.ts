@@ -1149,7 +1149,7 @@ export class Offer extends Entity {
   set ft_token_id(value: string) {
     this.set("ft_token_id", Value.fromString(value));
   }
-
+asasas
   get price(): BigInt {
     let value = this.get("price");
     return value!.toBigInt();
