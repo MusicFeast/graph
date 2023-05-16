@@ -5,21 +5,38 @@ features:
   - ipfsOnEthereumContracts
 dataSources:
   - kind: near
-    name: mintick-backend
+    name: musicfeast-backend
     network: near-testnet
     source:
-      account: nft5.mintickback.testnet
-      startBlock: 125167590
+      account: nft18.musicfeast.testnet
+      startBlock: 122415674
     mapping:
       apiVersion: 0.0.5
       language: wasm/assemblyscript
       entities:
-        - Series
+        - Artist
+        - Typetoken
+        - Serie
         - Nft
-        - Controlaforo
-        - Controlobject
         - Market
-        - Offer
       receiptHandlers:
         - handler: handleReceipt
-      file: mintick-backend\mintick-backend.wasm
+      file: musicfeast-backend\musicfeast-backend.wasm
+  - kind: near
+    name: musicfeast-market
+    network: near-testnet
+    source:
+      account: market2.musicfeast.testnet
+      startBlock: 114674879
+    mapping:
+      apiVersion: 0.0.5
+      language: wasm/assemblyscript
+      entities:
+        - Artist
+        - Typetoken
+        - Serie
+        - Nft
+        - Market
+      receiptHandlers:
+        - handler: handleReceipt
+      file: musicfeast-market\musicfeast-market.wasm

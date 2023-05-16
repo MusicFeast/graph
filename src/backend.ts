@@ -522,7 +522,7 @@ function handleAction(
   }
 
 
-  if (methodName == 'auto_swap_ini') {
+  /*if (methodName == 'auto_swap_ini') {
     if(outcome.logs.length > 0) {
       const outcomeLog = outcome.logs[0].toString();
       
@@ -569,10 +569,10 @@ function handleAction(
         } 
       }
     }
-  }
+  }*/
 
 
-  if (methodName == 'auto_swap_end') {
+  /*if (methodName == 'auto_swap_end') {
     if(outcome.logs.length > 0) {
       const outcomeLog = outcome.logs[0].toString();
       
@@ -598,7 +598,7 @@ function handleAction(
           swap.amount = swap.amount.minus(BigInt.fromString(amount_near.toString()))
           swap.tax = swap.tax.minus(BigInt.fromString(tax_near.toString()))
           swap.save()
-        }*/
+        }/
 
         let idhis = artista.toString() + "|" + blockHeader.timestampNanosec.toString()
         
@@ -617,9 +617,10 @@ function handleAction(
         } 
       }
     }
-  }
+  }*/
 
-  if (methodName == 'auto_swap_error') {
+
+  if (methodName == 'auto_swap_transfer_error') {
     if(outcome.logs.length > 0) {
       const outcomeLog = outcome.logs[0].toString();
       
@@ -634,19 +635,21 @@ function handleAction(
         
         const artista = data.get('artista')
         const amount_near = data.get('amount_near')
-        const tax_near = data.get('tax_near')
+        const amount = data.get('amount')
         const arg = data.get('arg')
+        const ft_token = data.get('ft_token')
 
-        if (!artista || !amount_near || !tax_near || !arg) return
+        if (!artista || !amount_near || !arg || !ft_token || !amount) return
         
         let swap = Autoswap.load(artista.toString())
         if(swap) {
-          if(artista.toString() == "0") {
+          if(artista.toString() == "0"){
             swap.amount_near = swap.amount_near.plus(BigInt.fromString(amount_near.toString()))
-            swap.tax = swap.tax.plus(BigInt.fromString(tax_near.toString()))
+            swap.amount_usd = swap.amount_usd.plus(BigDecimal.fromString(amount.toString()))
           } else {
-            swap.amount_near = swap.amount_near.plus(BigInt.fromString(amount_near.toString()).plus(BigInt.fromString(tax_near.toString())))
+            swap.amount_near = swap.amount_near.plus(BigInt.fromString(amount_near.toString()))
           }
+          swap.amount_usd =  swap.amount_usd.plus(BigDecimal.fromString(amount.toString()))
           swap.save()
         }
 
@@ -658,9 +661,65 @@ function handleAction(
           swaphis.artist_id = artista.toString()
           swaphis.fecha = BigInt.fromU64(blockHeader.timestampNanosec)
           swaphis.amount_artist = BigInt.fromString(amount_near.toString())
-          swaphis.tax_artist = BigInt.fromString(tax_near.toString())
+          swaphis.ft_token = ft_token.toString()
+          swaphis.tax_artist = BigInt.fromString("0")
+          swaphis.proccess = "auto_swap_transfer_error"
           swaphis.arg = arg.toString()
-          swaphis.proccess = "auto_swap_error"
+          
+          swaphis.save()
+        } 
+      }
+    }
+  }
+
+
+  if (methodName == 'auto_swap_ajuste_error') {
+    if(outcome.logs.length > 0) {
+      const outcomeLog = outcome.logs[0].toString();
+      
+      if(!json.try_fromString(outcomeLog).isOk) return
+      let outcomelogs = json.try_fromString(outcomeLog);
+      const jsonObject = outcomelogs.value.toObject();
+
+      if (jsonObject) {
+        const logJson = jsonObject.get('params');
+        if (!logJson) return;
+        const data = logJson.toObject();
+        
+        const artista = data.get('artista')
+        const amount_near = data.get('amount_near')
+        const amount = data.get('amount')
+        const arg = data.get('arg')
+        const ft_token = data.get('ft_token')
+        const tax_near = data.get('tax_near')
+
+        if (!artista || !amount_near || !arg || !ft_token || !amount || !tax_near) return
+        
+        let swap = Autoswap.load(artista.toString())
+        if(swap) {
+          if(artista.toString() == "0"){
+            swap.amount_near = BigInt.fromString(amount_near.toString())
+            swap.amount_usd = BigDecimal.fromString(amount.toString())
+            swap.tax = BigInt.fromString(tax_near.toString())
+          } else {
+            swap.amount_near = BigInt.fromString(amount_near.toString())
+          }
+          swap.amount_usd =  BigDecimal.fromString(amount.toString())
+          swap.save()
+        }
+
+        let idhis = artista.toString() + "|" + blockHeader.timestampNanosec.toString()
+        
+        let swaphis = Autoswaphistorico.load(idhis)
+        if(!swaphis) { 
+          swaphis = new Autoswaphistorico(idhis)
+          swaphis.artist_id = artista.toString()
+          swaphis.fecha = BigInt.fromU64(blockHeader.timestampNanosec)
+          swaphis.amount_artist = BigInt.fromString(amount_near.toString())
+          swaphis.ft_token = ft_token.toString()
+          swaphis.tax_artist = BigInt.fromString("0")
+          swaphis.proccess = "auto_swap_ajuste_error"
+          swaphis.arg = arg.toString()
           
           swaphis.save()
         } 

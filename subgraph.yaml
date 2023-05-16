@@ -5,31 +5,29 @@ features:
   - ipfsOnEthereumContracts
 dataSources:
   - kind: near
-    name: mintick-backend
+    name: musicfeast-backend
     network: near-testnet
     source:
-      account: "nft5.mintickback.testnet"
-      startBlock: 125167590
+      account: "nft18.musicfeast.testnet"
+      startBlock: 122415674
     mapping:
       apiVersion: 0.0.5
       language: wasm/assemblyscript
       entities:
-        - Series
+        - Artist
+        - Typetoken
+        - Serie
         - Nft
-        - Controlaforo
-        - Controlobject
         - Market
-        - Offer
       receiptHandlers:
         - handler: handleReceipt
       file: ./src/backend.ts
-<<<<<<< HEAD
   - kind: near
     name: musicfeast-market
-    network: near-mainnet
+    network: near-testnet
     source:
-      account: "market.everyone_eats_entertainment.near"
-      startBlock: 88049780
+      account: "market2.musicfeast.testnet"
+      startBlock: 114674879
     mapping:
       apiVersion: 0.0.5
       language: wasm/assemblyscript
@@ -42,6 +40,3 @@ dataSources:
       receiptHandlers:
         - handler: handleReceipt
       file: ./src/market.ts
-      sdadasd
-=======
->>>>>>> 58364c22638f87a5e2ef1bae7ca86cc869ff5ec8

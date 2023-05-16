@@ -1,30 +1,63 @@
+type Artist @entity {
+  id: ID!
+  name: String!
+  wallet: String!
+  fecha: BigInt!
+  collection: BigInt!
+  total_nft: BigInt!
+  total_collection: BigInt!
+  total_event: BigInt!
+}
+
+type Autoswap @entity {
+  id: ID!
+  artist_id: String!
+  amount_near: BigInt!
+  amount_usd: BigDecimal!
+  tax: BigInt!
+  status_id: Int
+  status_des: String
+}
+
+type Autoswaphistorico @entity {
+  id: ID!
+  artist_id: String!
+  fecha: BigInt!
+  price: BigDecimal
+  amount_artist: BigInt!
+  amount_musicfeast: BigInt
+  tax_artist: BigInt!
+  tax_musicfeast: BigInt
+  amount_ft: BigInt
+  ft_token: String
+  proccess: String!
+  arg: String
+}
+
+type Typetoken @entity {
+  id: ID!
+  description: String!
+  fecha: BigInt!
+}
+
 type Serie @entity {
   id: ID!
+  desc_series: String!
+  artist_id: String!
+  collection: BigInt!
   typetoken_id: String!
-  object_event: Boolean!
+  is_objects: Boolean!
   title: String!
   description: String
   media: String!
   extra: String
-  reference: String
-  issued_at: String
-  starts_at: String
-  updated_at: String
-  expires_at: String
+  reference: String!
   creator_id: String!
   price: BigDecimal
   price_near: BigDecimal
-  nft_amount_sold: BigInt!
   supply: BigInt!
-  nftsold: BigInt!
-  redeemerevents: BigInt!
-  aproved_event: BigInt!
-  redeemerobjects: BigInt!
-  aproved_objects: BigInt!
   copies: BigInt
-  is_mintable: Boolean!
   fecha: BigInt!
-  tokens: [Nft!]! @derivedFrom(field: "metadata")
 }
 
 type Nft @entity {
@@ -32,30 +65,16 @@ type Nft @entity {
   serie_id: String!
   owner_id: String!
   title: String!
-  metadata: Serie!
+  description: String
+  media: String!
+  extra: String
+  reference: String!
   fecha: BigInt!
+  artist_id: String!
+  collection: BigInt!
   typetoken_id: String!
+  is_objects: Boolean!
   offer: [Offer!]! @derivedFrom(field: "data_nft")
-}
-
-type Controlaforo @entity {
-  id: ID!
-  owner_id: String!
-  token_object_id: String!
-  event_id: String!
-  user_burn: String!
-  fecha: BigInt!
-  aproved: Boolean!
-}
-
-type Controlobject @entity {
-  id: ID!
-  owner_id: String!
-  token_object_id: String!
-  event_id: String!
-  user_burn: String!
-  fecha: BigInt!
-  aproved: Boolean!
 }
 
 type Market @entity {
