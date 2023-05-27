@@ -155,7 +155,17 @@ function handleAction(
       }
     }
   }
-  
+  /*{
+    series(where: {artist_id:"19"}){
+      id
+      desc_series
+      artist_id
+      collection
+      title
+      description
+      price
+    }
+  }*/
   if (methodName == 'update_nft_series') {
     if(outcome.logs.length > 0) {
       const outcomeLog = outcome.logs[0].toString();
@@ -208,7 +218,7 @@ function handleAction(
 
  //dfdsfsdfsdfsdf
  //asddasdsd
-  if (methodName == 'nft_series') {
+  if (methodName == 'nft_series' || methodName == 'nft_objects') {
     if(outcome.logs.length > 0) {
       const outcomeLog = outcome.logs[0].toString();
       
