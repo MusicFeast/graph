@@ -1,5 +1,5 @@
 import { near, BigInt, JSONValue, json, ipfs, log, TypedMap, Value, typeConversion, BigDecimal, bigInt, bigDecimal } from "@graphprotocol/graph-ts"
-import { Artist, Typetoken, Serie, Nft, Market, Autoswap, Autoswaphistorico } from "../generated/schema"
+import { Artist, Typetoken, Serie, Nft, Market, Autoswap, Autoswaphistorico, Controlobject } from "../generated/schema"
 
 export function handleReceipt(receipt: near.ReceiptWithOutcome): void {
   const actions = receipt.receipt.actions;
@@ -173,20 +173,21 @@ function handleAction(
       if(!json.try_fromString(outcomeLog).isOk) return
       let outcomelogs = json.try_fromString(outcomeLog);
       const jsonObject = outcomelogs.value.toObject();
-
+      
       if (jsonObject) {
         const logJson = jsonObject.get('params');
         if (!logJson) return;
+  
         const data = logJson.toObject();
         
         const token_series_id = data.get('token_series_id')
         const metadatalog = data.get('token_metadata')
-
+  
         if (!token_series_id || !metadatalog) return
-
+  
         //convertimos la variable metadata en un objeto para poder acceder a sus variebles internas
         const metadata = metadatalog.toObject()
-
+        
         //en caso de que no se transformable en un objeto se detiene la funcion
         if(!metadata) return
 
@@ -195,19 +196,22 @@ function handleAction(
         const description = metadata.get('description')
         const media = metadata.get('media')
         const price = data.get('price')
-    
+        const extra = metadata.get('extra')
         
         //se verifica que todas las variables que necesitamos existan en el objeto metadata
-        if(!title || !description || !media || !price) return
+        if(!title || !description || !media || !price || !extra) return
         
-        if(title.isNull() || media.isNull()) return
-
+        //if(title.isNull() || media.isNull()) return
         let serie = Serie.load(token_series_id.toString())
         if (serie) {
-          serie.title = title.toString()
+          if(!title.isNull()) { serie.title = title.toString() }
           if(!description.isNull()) { serie.description = description.toString() }
-          serie.media = media.toString()
+          if(!media.isNull()) { serie.media = media.toString() }
           if(!price.isNull()) { serie.price = BigDecimal.fromString(price.toString()) }
+          if(!extra.isNull()) {
+            serie.extra = extra.toString()
+          }
+          
           serie.save()
         }
         
@@ -310,7 +314,7 @@ function handleAction(
 
 
   //este evento es disparado cuando el metodo es create_form
-  if (methodName == 'nft_mint' || methodName == 'nft_buy') {  
+  if (methodName == 'nft_mint' || methodName == 'nft_buy' || methodName == 'nft_mint_for') {  
     if(outcome.logs.length > 0) {
       for (let index = 0; index < outcome.logs.length; index++) {
         //obtenemos la primera iteracion del log
@@ -346,7 +350,11 @@ function handleAction(
           //verifico que la metadata exista, de lo contrario no se guarda el nft
           if(!metadata) return
 
+          let is_visible = true
 
+          if((serie_id.toString().split("|")[1].toString() == "3" || serie_id.toString().split("|")[1].toString() == "4") && metadata.is_objects == false) {
+            is_visible = false;
+          } 
 
           //buscamos si existe un token id
           let nft = Nft.load(tokenId)
@@ -356,16 +364,13 @@ function handleAction(
             nft = new Nft(tokenId)
             nft.serie_id = serie_id
             nft.owner_id = owner_id.toString()
-            nft.title = metadata.title + " # " + tokenId.split(":", 2)[1].toString()
-            nft.description = metadata.description
-            nft.media = metadata.media
-            nft.extra = metadata.extra
-            nft.reference = metadata.reference
             nft.fecha = BigInt.fromU64(blockHeader.timestampNanosec)
             nft.artist_id = serie_id.toString().split("|")[0].toString()
             nft.collection = BigInt.fromString(serie_id.toString().split("|")[2].toString())
             nft.typetoken_id = serie_id.toString().split("|")[1].toString()
             nft.is_objects = metadata.is_objects
+            nft.is_visible = is_visible
+            nft.metadata = serie_id
             nft.save()
           }
           metadata.supply = metadata.supply.plus(BigInt.fromString("1"))
@@ -738,7 +743,7 @@ function handleAction(
   }
 
 
-  if (methodName == 'nft_transfer' || methodName == 'nft_transfer_payout' || methodName == 'nft_transfer_unsafe' || methodName == 'nft_transfer_call') {  
+  if (methodName == 'nft_transfer' || methodName == 'nft_transfer_payout' || methodName == 'nft_transfer_unsafe' || methodName == 'nft_transfer_call' || methodName == 'deliver_gift') {  
     if(outcome.logs.length > 0) {
       //obtenemos la primera iteracion del log
       const outcomeLog = outcome.logs[0].toString();
@@ -747,7 +752,7 @@ function handleAction(
       let outcomelogs = json.try_fromString(parsed);
     
       //validamos que se cree un objeto tipo ValueJSON valido a partir del log capturado
-      if(!outcomelogs.isOk) return
+      if(!outcomelogs.isOk)  return
 
       const jsonlog = outcomelogs.value.toObject();
       
@@ -787,48 +792,120 @@ function handleAction(
   
   if (methodName == 'nft_burn') {  
     if(outcome.logs.length > 0) {
-      //obtenemos la primera iteracion del log
-      const outcomeLog = outcome.logs[0].toString();
-      const parsed = outcomeLog.replace('EVENT_JSON:', '')  
-      //convirtiendo el log en un objeto ValueJSON
-      let outcomelogs = json.try_fromString(parsed);
-    
-      //validamos que se cree un objeto tipo ValueJSON valido a partir del log capturado
-      if(!outcomelogs.isOk) return
+      for (let index = 0; index < outcome.logs.length; index++) {
+        //obtenemos la primera iteracion del log
+        const outcomeLog = outcome.logs[index].toString();
 
-      const jsonlog = outcomelogs.value.toObject();
-      
-      const eventData = jsonlog.get('data')
-      if (!eventData) return
-      
-      const eventArray:JSONValue[] = eventData.toArray()
+        if(outcomeLog.substring(0, 11) == "EVENT_JSON:") {
 
-      const data = eventArray[0].toObject()
-      const tokenIds = data.get('token_ids')
-      const owner_id = data.get('owner_id')
       
-      if (!tokenIds || !owner_id) return
-      
-      const ids:JSONValue[] = tokenIds.toArray()
-      const tokenId = ids[0].toString()
+          const parsed = outcomeLog.replace('EVENT_JSON:', '')  
+          //convirtiendo el log en un objeto ValueJSON
+          let outcomelogs = json.try_fromString(parsed);
+        
+          //validamos que se cree un objeto tipo ValueJSON valido a partir del log capturado
+          if(!outcomelogs.isOk) return
 
-      //buscamos si existe un token id
-      let nft = Nft.load(tokenId)
-      //validando que el token id exista para eliminarlo
-      if(nft) { 
-        nft.delete()
+          const jsonlog = outcomelogs.value.toObject();
+          
+          const eventData = jsonlog.get('data')
+          if (!eventData) return
+          
+          const eventArray:JSONValue[] = eventData.toArray()
+
+          const data = eventArray[0].toObject()
+          const tokenIds = data.get('token_ids')
+          const owner_id = data.get('owner_id')
+          
+          if (!tokenIds || !owner_id) return
+          
+          const ids:JSONValue[] = tokenIds.toArray()
+          const tokenId = ids[0].toString()
+
+          //buscamos si existe un token id
+          let nft = Nft.load(tokenId)
+          //validando que el token id exista para eliminarlo
+          if(nft) { 
+            nft.delete()
+          }
+
+          //si existe en el market lo eliminamos
+          const id = tokenId.toString() + "|" + owner_id.toString()
+
+          let market = Market.load(id)
+          if (market) {
+            market.delete()    
+          }
+        }  else {
+          if(!json.try_fromString(outcomeLog).isOk) return
+          let outcomelogs = json.try_fromString(outcomeLog);
+          const jsonObject = outcomelogs.value.toObject();
+
+          if (jsonObject) {
+            const logJson = jsonObject.get('params');
+            if (!logJson) return;
+            const data = logJson.toObject();
+            
+            const tokenid = data.get('token_id')
+            const ownerid = data.get('owner_id')
+            const reedemer = data.get('reedemer')
+
+            if (!tokenid || !ownerid || !reedemer) return
+              
+            if(reedemer.toBool()) {
+              let objectc = Controlobject.load(tokenid.toString())
+              
+              if(!objectc) {
+                let serieid = tokenid.toString().split(":")[0].toString()
+                
+                let serie = Serie.load(serieid)
+
+                objectc = new Controlobject(tokenid.toString())
+                objectc.owner_id = ownerid.toString()
+                objectc.artist_id = tokenid.toString().split("|")[0].toString()
+                objectc.token_object_id = tokenid.toString()
+                objectc.serie_id = serieid
+                objectc.extra = serie!.extra
+                objectc.user_burn = ownerid.toString()
+                objectc.fecha = BigInt.fromU64(blockHeader.timestampNanosec)
+                objectc.aproved = false
+                objectc.save()
+              }
+            }
+          }
+        }
       }
-
-      //si existe en el market lo eliminamos
-      const id = tokenId.toString() + "|" + owner_id.toString()
-
-      let market = Market.load(id)
-      if (market) {
-        market.delete()    
-      }
-
     }
   }
 
+
+  if (methodName == 'reedemer_approved') {  
+    if(outcome.logs.length > 0) {
+      //obtenemos la primera iteracion del log
+      const outcomeLog = outcome.logs[0].toString();
+      if(!json.try_fromString(outcomeLog).isOk) return
+          let outcomelogs = json.try_fromString(outcomeLog);
+          const jsonObject = outcomelogs.value.toObject();
+
+          if (jsonObject) {
+            const logJson = jsonObject.get('params');
+            if (!logJson) return;
+            const data = logJson.toObject();
+            
+            const tokenid = data.get('token_id')
+            const userid = data.get('user_id')
+
+            if (!tokenid || !userid) return 
+            
+            let objectc = Controlobject.load(tokenid.toString())
+            
+            if(objectc) {
+              objectc.aproved = true
+              objectc.save()
+            }
+          }
+          
+        }
+  }
 
 }

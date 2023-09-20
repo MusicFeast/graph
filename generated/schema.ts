@@ -645,6 +645,15 @@ export class Serie extends Entity {
   set fecha(value: BigInt) {
     this.set("fecha", Value.fromBigInt(value));
   }
+
+  get tokens(): Array<string> {
+    let value = this.get("tokens");
+    return value!.toStringArray();
+  }
+
+  set tokens(value: Array<string>) {
+    this.set("tokens", Value.fromStringArray(value));
+  }
 }
 
 export class Nft extends Entity {
@@ -708,67 +717,6 @@ export class Nft extends Entity {
     this.set("owner_id", Value.fromString(value));
   }
 
-  get title(): string {
-    let value = this.get("title");
-    return value!.toString();
-  }
-
-  set title(value: string) {
-    this.set("title", Value.fromString(value));
-  }
-
-  get description(): string | null {
-    let value = this.get("description");
-    if (!value || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toString();
-    }
-  }
-
-  set description(value: string | null) {
-    if (!value) {
-      this.unset("description");
-    } else {
-      this.set("description", Value.fromString(<string>value));
-    }
-  }
-
-  get media(): string {
-    let value = this.get("media");
-    return value!.toString();
-  }
-
-  set media(value: string) {
-    this.set("media", Value.fromString(value));
-  }
-
-  get extra(): string | null {
-    let value = this.get("extra");
-    if (!value || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toString();
-    }
-  }
-
-  set extra(value: string | null) {
-    if (!value) {
-      this.unset("extra");
-    } else {
-      this.set("extra", Value.fromString(<string>value));
-    }
-  }
-
-  get reference(): string {
-    let value = this.get("reference");
-    return value!.toString();
-  }
-
-  set reference(value: string) {
-    this.set("reference", Value.fromString(value));
-  }
-
   get fecha(): BigInt {
     let value = this.get("fecha");
     return value!.toBigInt();
@@ -814,6 +762,15 @@ export class Nft extends Entity {
     this.set("is_objects", Value.fromBoolean(value));
   }
 
+  get is_visible(): boolean {
+    let value = this.get("is_objects");
+    return value!.toBoolean();
+  }
+
+  set is_visible(value: boolean) {
+    this.set("is_visible", Value.fromBoolean(value));
+  }
+
   get offer(): Array<string> {
     let value = this.get("offer");
     return value!.toStringArray();
@@ -821,6 +778,14 @@ export class Nft extends Entity {
 
   set offer(value: Array<string>) {
     this.set("offer", Value.fromStringArray(value));
+  }
+  get metadata(): string {
+    let value = this.get("metadata");
+    return value!.toString();
+  }
+
+  set metadata(value: string) {
+    this.set("metadata", Value.fromString(value));
   }
 }
 
@@ -1166,5 +1131,117 @@ export class Offer extends Entity {
 
   set price_near(value: BigDecimal) {
     this.set("price_near", Value.fromBigDecimal(value));
+  }
+}
+
+export class Controlobject extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(id != null, "Cannot save Controlobject entity without an ID");
+    if (id) {
+      assert(
+        id.kind == ValueKind.STRING,
+        `Entities of type Controlobject must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`
+      );
+      store.set("Controlobject", id.toString(), this);
+    }
+  }
+
+  static load(id: string): Controlobject | null {
+    return changetype<Controlobject | null>(store.get("Controlobject", id));
+  }
+
+  get id(): string {
+    let value = this.get("id");
+    return value!.toString();
+  }
+
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
+  }
+
+  get owner_id(): string {
+    let value = this.get("owner_id");
+    return value!.toString();
+  }
+
+  set owner_id(value: string) {
+    this.set("owner_id", Value.fromString(value));
+  }
+
+  get artist_id(): string {
+    let value = this.get("artist_id");
+    return value!.toString();
+  }
+
+  set artist_id(value: string) {
+    this.set("artist_id", Value.fromString(value));
+  }
+
+  get token_object_id(): string {
+    let value = this.get("token_object_id");
+    return value!.toString();
+  }
+
+  set token_object_id(value: string) {
+    this.set("token_object_id", Value.fromString(value));
+  }
+
+  get serie_id(): string {
+    let value = this.get("serie_id");
+    return value!.toString();
+  }
+
+  set serie_id(value: string) {
+    this.set("serie_id", Value.fromString(value));
+  }
+
+  get user_burn(): string {
+    let value = this.get("user_burn");
+    return value!.toString();
+  }
+
+  set user_burn(value: string) {
+    this.set("user_burn", Value.fromString(value));
+  }
+
+  get fecha(): BigInt {
+    let value = this.get("fecha");
+    return value!.toBigInt();
+  }
+
+  set fecha(value: BigInt) {
+    this.set("fecha", Value.fromBigInt(value));
+  }
+
+  get extra(): string | null {
+    let value = this.get("extra");
+    if (!value || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set extra(value: string | null) {
+    if (!value) {
+      this.unset("extra");
+    } else {
+      this.set("extra", Value.fromString(<string>value));
+    }
+  }
+
+  get aproved(): boolean {
+    let value = this.get("aproved");
+    return value!.toBoolean();
+  }
+
+  set aproved(value: boolean) {
+    this.set("aproved", Value.fromBoolean(value));
   }
 }
